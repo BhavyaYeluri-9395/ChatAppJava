@@ -32,7 +32,6 @@
             overflow: hidden;
         }
 
-        /* Header */
         .chat-header {
             background: #0984e3;
             color: white;
@@ -42,7 +41,6 @@
             font-weight: bold;
         }
 
-        /* Username entry section */
         .username-section {
             padding: 30px;
             background: #f8f9fa;
@@ -83,7 +81,6 @@
             background: #0770c2;
         }
 
-        /* Chat messages area */
         .chat-messages {
             flex: 1;
             padding: 20px;
@@ -136,12 +133,11 @@
             margin: 10px 0;
         }
 
-        /* Message input area */
         .message-input-area {
             padding: 20px;
             background: white;
             border-top: 1px solid #ddd;
-            display: none; /* Hidden until user joins */
+            display: none;
         }
 
         .message-input-area.active {
@@ -180,51 +176,32 @@
         .hidden {
             display: none !important;
         }
-
-        /* Mobile responsive */
-        @media (max-width: 600px) {
-            .chat-container {
-                width: 95%;
-                height: 80vh;
-            }
-            
-            .username-section input {
-                width: 150px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="chat-container">
-        <!-- Header -->
         <div class="chat-header">
             💬 Multi-User Chat Room
         </div>
         
-        <!-- Username Entry Section -->
         <div class="username-section" id="username-section">
             <h3>Enter your name to start chatting:</h3>
             <input type="text" id="username-input" placeholder="Your name..." maxlength="20">
             <button id="join-btn">Join Chat</button>
         </div>
         
-        <!-- Chat Messages Area -->
         <div class="chat-messages hidden" id="chat-messages"></div>
         
-        <!-- Message Input Area -->
         <div class="message-input-area" id="message-input-area">
             <input type="text" id="message-input" placeholder="Type your message...">
             <button id="send-btn">Send</button>
         </div>
     </div>
 
-    <!-- Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Connect to the server
         const socket = io();
         
-        // Get all the elements we need
         const usernameSection = document.getElementById('username-section');
         const usernameInput = document.getElementById('username-input');
         const joinBtn = document.getElementById('join-btn');
@@ -236,7 +213,6 @@
         let currentUsername = '';
         let hasJoined = false;
 
-        // Join the chat when user clicks "Join Chat" button
         joinBtn.addEventListener('click', joinChat);
         usernameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') joinChat();
@@ -245,29 +221,22 @@
         function joinChat() {
             const username = usernameInput.value.trim();
             
-            // Check if username is valid
             if (username.length < 2) {
                 alert('Please enter a name with at least 2 characters!');
                 return;
             }
             
-            // Save username and join
             currentUsername = username;
             hasJoined = true;
             
-            // Hide username section, show chat
             usernameSection.classList.add('hidden');
             chatMessages.classList.remove('hidden');
             messageInputArea.classList.add('active');
             
-            // Tell server we joined
             socket.emit('user-join', username);
-            
-            // Focus on message input
             messageInput.focus();
         }
 
-        // Send message when user clicks "Send" button
         sendBtn.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
@@ -277,15 +246,11 @@
             const message = messageInput.value.trim();
             
             if (message && hasJoined) {
-                // Send message to server
                 socket.emit('send-message', { message: message });
-                
-                // Clear input
                 messageInput.value = '';
             }
         }
 
-        // Listen for messages from server
         socket.on('receive-message', (data) => {
             addMessage(data.username, data.message, data.time);
         });
@@ -302,7 +267,6 @@
             addWelcomeMessage(data.message);
         });
 
-        // Functions to add messages to chat
         function addMessage(username, message, time) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
@@ -346,7 +310,6 @@
             return div.innerHTML;
         }
 
-        // Focus on username input when page loads
         window.addEventListener('load', () => {
             usernameInput.focus();
         });
