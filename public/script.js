@@ -1,20 +1,25 @@
 const socket = io();
+const chat = document.getElementById("chat");
+const input = document.getElementById("message");
+const sendBtn = document.getElementById("send");
 
-const form = document.getElementById("form");
-const input = document.getElementById("input");
-const messages = document.getElementById("messages");
+// Show messages
+socket.on("chat message", (msg) => {
+  const div = document.createElement("div");
+  div.textContent = msg;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+});
 
-form.addEventListener("submit", function(e) {
-  e.preventDefault();
-  if (input.value) {
+// Send message
+sendBtn.addEventListener("click", () => {
+  if (input.value.trim() !== "") {
     socket.emit("chat message", input.value);
     input.value = "";
   }
 });
 
-socket.on("chat message", function(msg) {
-  const item = document.createElement("li");
-  item.textContent = msg;
-  messages.appendChild(item);
-  window.scrollTo(0, document.body.scrollHeight);
+// Send message on Enter key
+input.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") sendBtn.click();
 });
