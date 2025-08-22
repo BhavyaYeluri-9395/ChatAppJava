@@ -94,11 +94,11 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            animation: fadeIn 0.3s ease-in;
+            animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -106,6 +106,7 @@
             font-size: 0.9em;
             color: #666;
             margin-bottom: 5px;
+            font-weight: bold;
         }
 
         .message-text {
@@ -118,8 +119,8 @@
             background: #e3f2fd;
             color: #1976d2;
             font-style: italic;
-            padding: 8px;
-            border-radius: 5px;
+            padding: 10px;
+            border-radius: 8px;
             margin: 10px 0;
         }
 
@@ -129,7 +130,7 @@
             color: #2e7d2e;
             font-style: italic;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 8px;
             margin: 10px 0;
         }
 
@@ -166,7 +167,6 @@
             border-radius: 25px;
             font-size: 16px;
             cursor: pointer;
-            min-width: 80px;
         }
 
         .message-input-area button:hover {
@@ -193,7 +193,7 @@
         <div class="chat-messages hidden" id="chat-messages"></div>
         
         <div class="message-input-area" id="message-input-area">
-            <input type="text" id="message-input" placeholder="Type your message...">
+            <input type="text" id="message-input" placeholder="Type your message..." maxlength="500">
             <button id="send-btn">Send</button>
         </div>
     </div>
@@ -202,6 +202,7 @@
     <script>
         const socket = io();
         
+        // Get elements
         const usernameSection = document.getElementById('username-section');
         const usernameInput = document.getElementById('username-input');
         const joinBtn = document.getElementById('join-btn');
@@ -211,8 +212,9 @@
         const sendBtn = document.getElementById('send-btn');
         
         let currentUsername = '';
-        let hasJoined = false;
+        let isInChat = false;
 
+        // Join chat
         joinBtn.addEventListener('click', joinChat);
         usernameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') joinChat();
@@ -227,16 +229,21 @@
             }
             
             currentUsername = username;
-            hasJoined = true;
+            isInChat = true;
             
+            // Hide username section, show chat
             usernameSection.classList.add('hidden');
             chatMessages.classList.remove('hidden');
             messageInputArea.classList.add('active');
             
-            socket.emit('user-join', username);
+            // Join the chat
+            socket.emit('join-chat', username);
+            
+            // Focus message input
             messageInput.focus();
         }
 
+        // Send message
         sendBtn.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
@@ -245,36 +252,29 @@
         function sendMessage() {
             const message = messageInput.value.trim();
             
-            if (message && hasJoined) {
+            if (message && isInChat) {
                 socket.emit('send-message', { message: message });
                 messageInput.value = '';
             }
         }
 
-        socket.on('receive-message', (data) => {
-            addMessage(data.username, data.message, data.time);
+        // Receive messages
+        socket.on('chat-message', (data) => {
+            if (data.type === 'welcome') {
+                addWelcomeMessage(data.message);
+            } else if (data.type === 'join' || data.type === 'leave') {
+                addSystemMessage(data.message);
+            } else {
+                addChatMessage(data.username, data.message, data.time);
+            }
         });
 
-        socket.on('user-joined', (data) => {
-            addSystemMessage(data.message);
-        });
-
-        socket.on('user-left', (data) => {
-            addSystemMessage(data.message);
-        });
-
-        socket.on('welcome', (data) => {
-            addWelcomeMessage(data.message);
-        });
-
-        function addMessage(username, message, time) {
+        function addChatMessage(username, message, time) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
             
             messageDiv.innerHTML = `
-                <div class="message-header">
-                    <strong>${escapeHtml(username)}</strong> • ${time}
-                </div>
+                <div class="message-header">${escapeHtml(username)} • ${time}</div>
                 <div class="message-text">${escapeHtml(message)}</div>
             `;
             
@@ -310,6 +310,7 @@
             return div.innerHTML;
         }
 
+        // Focus username input on page load
         window.addEventListener('load', () => {
             usernameInput.focus();
         });
