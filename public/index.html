@@ -1,21 +1,355 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Web Chat App</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #chat { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; }
-    #message { width: 80%; padding: 5px; }
-    #send { padding: 5px 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-User Chat App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 600px;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .chat-header {
+            background: #0984e3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        /* Username entry section */
+        .username-section {
+            padding: 30px;
+            background: #f8f9fa;
+            text-align: center;
+        }
+
+        .username-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .username-section input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 200px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .username-section input:focus {
+            outline: none;
+            border-color: #0984e3;
+        }
+
+        .username-section button {
+            padding: 12px 25px;
+            margin-left: 10px;
+            background: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .username-section button:hover {
+            background: #0770c2;
+        }
+
+        /* Chat messages area */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-header {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .message-text {
+            color: #333;
+            font-size: 1em;
+        }
+
+        .system-message {
+            text-align: center;
+            background: #e3f2fd;
+            color: #1976d2;
+            font-style: italic;
+            padding: 8px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .welcome-message {
+            text-align: center;
+            background: #e8f5e8;
+            color: #2e7d2e;
+            font-style: italic;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        /* Message input area */
+        .message-input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: none; /* Hidden until user joins */
+        }
+
+        .message-input-area.active {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input-area input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+
+        .message-input-area input:focus {
+            outline: none;
+            border-color: #0984e3;
+        }
+
+        .message-input-area button {
+            padding: 12px 25px;
+            background: #0984e3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            min-width: 80px;
+        }
+
+        .message-input-area button:hover {
+            background: #0770c2;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 600px) {
+            .chat-container {
+                width: 95%;
+                height: 80vh;
+            }
+            
+            .username-section input {
+                width: 150px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h2>Real-Time Chat</h2>
-  <div id="chat"></div>
-  <input id="message" placeholder="Type a message..." autocomplete="off" />
-  <button id="send">Send</button>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            💬 Multi-User Chat Room
+        </div>
+        
+        <!-- Username Entry Section -->
+        <div class="username-section" id="username-section">
+            <h3>Enter your name to start chatting:</h3>
+            <input type="text" id="username-input" placeholder="Your name..." maxlength="20">
+            <button id="join-btn">Join Chat</button>
+        </div>
+        
+        <!-- Chat Messages Area -->
+        <div class="chat-messages hidden" id="chat-messages"></div>
+        
+        <!-- Message Input Area -->
+        <div class="message-input-area" id="message-input-area">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Connect to the server
+        const socket = io();
+        
+        // Get all the elements we need
+        const usernameSection = document.getElementById('username-section');
+        const usernameInput = document.getElementById('username-input');
+        const joinBtn = document.getElementById('join-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInputArea = document.getElementById('message-input-area');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        
+        let currentUsername = '';
+        let hasJoined = false;
+
+        // Join the chat when user clicks "Join Chat" button
+        joinBtn.addEventListener('click', joinChat);
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') joinChat();
+        });
+
+        function joinChat() {
+            const username = usernameInput.value.trim();
+            
+            // Check if username is valid
+            if (username.length < 2) {
+                alert('Please enter a name with at least 2 characters!');
+                return;
+            }
+            
+            // Save username and join
+            currentUsername = username;
+            hasJoined = true;
+            
+            // Hide username section, show chat
+            usernameSection.classList.add('hidden');
+            chatMessages.classList.remove('hidden');
+            messageInputArea.classList.add('active');
+            
+            // Tell server we joined
+            socket.emit('user-join', username);
+            
+            // Focus on message input
+            messageInput.focus();
+        }
+
+        // Send message when user clicks "Send" button
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (message && hasJoined) {
+                // Send message to server
+                socket.emit('send-message', { message: message });
+                
+                // Clear input
+                messageInput.value = '';
+            }
+        }
+
+        // Listen for messages from server
+        socket.on('receive-message', (data) => {
+            addMessage(data.username, data.message, data.time);
+        });
+
+        socket.on('user-joined', (data) => {
+            addSystemMessage(data.message);
+        });
+
+        socket.on('user-left', (data) => {
+            addSystemMessage(data.message);
+        });
+
+        socket.on('welcome', (data) => {
+            addWelcomeMessage(data.message);
+        });
+
+        // Functions to add messages to chat
+        function addMessage(username, message, time) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <strong>${escapeHtml(username)}</strong> • ${time}
+                </div>
+                <div class="message-text">${escapeHtml(message)}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function addSystemMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'system-message';
+            messageDiv.textContent = message;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function addWelcomeMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'welcome-message';
+            messageDiv.textContent = message;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Focus on username input when page loads
+        window.addEventListener('load', () => {
+            usernameInput.focus();
+        });
+    </script>
 </body>
 </html>
