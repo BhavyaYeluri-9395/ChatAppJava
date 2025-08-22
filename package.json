@@ -1,0 +1,36 @@
+{
+  "name": "chatappjava",
+  "version": "1.0.0",
+  "description": "A real-time multi-user chat application using Node.js, Express, and Socket.IO",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chat",
+    "socket.io",
+    "real-time",
+    "websockets",
+    "express",
+    "nodejs"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BhavyaYeluri-9395/ChatAppJava.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BhavyaYeluri-9395/ChatAppJava/issues"
+  },
+  "homepage": "https://github.com/BhavyaYeluri-9395/ChatAppJava#readme"
+}
